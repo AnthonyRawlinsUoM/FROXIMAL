@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+    <xs:element name="preflighted">
+        <xs:complexType>
+            <xs:sequence>
+
+                <xs:element name="relation" minOccurs="0" maxOccurs="100000">
+                    <xs:complexType>
+                        <xs:sequence>
+
+                            <xs:element name="sql-group" minOccurs="1" maxOccurs="100">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="sql-statement" minOccurs="1" maxOccurs="100">
+                                            <xs:complexType>
+                                                <xs:sequence>
+                                                    <xs:attribute name="action"/>
+                                                    <xs:attribute name="table"/>
+                                                </xs:sequence>
+                                            </xs:complexType>
+                                        </xs:element>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+
+                            <xs:element name="meta" minOccurs="1" maxOccurs="1">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name="uuid" minOccurs="1" maxOccurs="1" type="xs:string"/>
+                                        <xs:element name="project" minOccurs="0" maxOccurs="1" type="xs:string"/>
+                                        <xs:element name="subproject" minOccurs="0" maxOccurs="1" type="xs:string"/>
+                                        <xs:element name="regime" minOccurs="0" maxOccurs="1" type="xs:string"/>
+                                        <xs:element name="replicate" minOccurs="0" maxOccurs="1" type="xs:string"/>
+                                    </xs:sequence>
+                                </xs:complxType>
+                            </xs:element>
+
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>

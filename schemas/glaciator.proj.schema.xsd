@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+elementFormDefault="qualified">
+<xs:element name="glaciator_project">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element name="glaciator_project_name" type="xs:string"/>
+            <xs:element name="glaciator_project_description" type="xs:string"/>
+            <xs:element name="glaciator_project_type" type="xs:string"/>
+            <xs:element name="source_machinery_data_dir_path" type="xs:string"/>
+            <xs:element name="frost_base_dataset_id" type="xs:string"/>
+
+            <xs:element name="target_drive">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="letter" type="xs:string"/>
+                        <xs:element name="machine_data_root_dir_path" type="xs:string"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="machines_settings_file">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="id" type="xs:string"/>
+                        <xs:element name="path" type="xs:string"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="fuel_machine_options">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="load_narclim_model_grids_in_shared_mem" type="xs:boolean"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="plan_burn_machine_options">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="load_machine_data_in_shared_mem" type="xs:boolean"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+
+
+            <xs:element minOccurs="0" maxOccurs="100" name="frost_auto_multi_project_regular">
+                <xs:complexType>
+
+                    <xs:all>
+                        <xs:element name="multi_project_name" type="xs:string"/>
+                        <xs:element name="target_machine_data_drive" type="xs:string"/>
+                        <xs:element name="output_dir_path" type="xs:string"/>
+                        <xs:element name="machines_settings_file_id" type="xs:string"/>
+                        <xs:element name="start_year_of_first_regsim_fireyear" type="xs:string"/>
+                        <xs:element name="regsim_duration_years" type="xs:string"/>
+                        <xs:element name="years_between_regsims" type="xs:string"/>
+                        <xs:element name="subproject_name_mask" type="xs:string"/>
+                        <xs:element name="regsim_index_start" type="xs:string"/>
+                        <xs:element name="regsim_index_end" type="xs:string"/>
+                        <xs:element name="frappe_project_template_file_id" type="xs:string"/>
+
+                        <xs:element minOccurs="0" maxOccurs="1" name="multi_startup_fuel_info">
+                            <xs:complexType>
+                                <xs:all>
+                                    <xs:element name="fire_history_zipgrid_filename" type="xs:string"/>
+                                    <xs:element name="aligned_fire_history" type="xs:boolean"/>
+                                </xs:all>
+                            </xs:complexType>
+                        </xs:element>
+
+                        <xs:element minOccurs="0" maxOccurs="1" name="single_startup_fuel_info">
+                            <xs:complexType>
+                                <xs:all>
+                                    <xs:element name="uses_fire_history" type="xs:boolean"/>
+                                </xs:all>
+                            </xs:complexType>
+                        </xs:element>
+
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="frappeator_settings">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="run_frappeator" type="xs:boolean"/>
+                        <xs:element name="frappeator_output_root_dir_path" type="xs:string"/>
+                        <xs:element name="frappe_exe_path" type="xs:string"/>
+                        <xs:element name="is_frost_multi_proj" type="xs:boolean"/>
+                        <xs:element name="concurrent_threads" type="xs:integer"/>
+                        <xs:element name="frappeator_exe_path" type="xs:string"/>
+
+                        <xs:element minOccurs="0" maxOccurs="100" name="frappe_project_template_file">
+                            <xs:complexType>
+                                <xs:all>
+                                    <xs:element name="id" type="xs:string"/>
+                                    <xs:element name="path" type="xs:string"/>
+                                </xs:all>
+                            </xs:complexType>
+                        </xs:element>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+
+        </xs:sequence>
+        <xs:attribute name="version" type="xs:decimal" use="required"/>
+    </xs:complexType>
+</xs:element>
+</xs:schema>

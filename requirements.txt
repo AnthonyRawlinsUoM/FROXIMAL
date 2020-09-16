@@ -1,0 +1,10 @@
+lxml
+dict2xml
+xmlschema
+psycopg2-binary
+tabulate
+untangle
+sqlite3
+sqlalchemy
+json
+yaml

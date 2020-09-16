@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+elementFormDefault="qualified">
+<xs:element name="frost_regsim_project">
+    <xs:complexType>
+        <xs:all>
+            <xs:element name="project_name" type="xs:string"/>
+            <xs:element name="project_descr" type="xs:string"/>
+            <xs:element name="machines_in_files_root_dir" type="xs:string"/>
+            <xs:element name="base_dataset_id" type="xs:integer"/>
+            <xs:element name="output_root_dir" type="xs:string"/>
+            <xs:element name="start_year_of_first_fireyear" type="xs:integer"/>
+            <xs:element name="start_year_of_last_fireyear" type="xs:integer"/>
+
+            <xs:element name="startup_fuel_info">
+                <xs:complexType>
+                    <xs:sequence>
+                        <xs:element name="uses_fire_history" type="xs:boolean" minOccurs="1"/>
+                        <xs:element name="fire_history_zipgrid_filename" type="xs:string" minOccurs="0"/>
+                        <xs:element name="current_in_year" type="xs:integer" minOccurs="0"/>
+                        <xs:element name="aligned_fire_history" type="xs:boolean" minOccurs="0"/>
+                    </xs:sequence>
+                </xs:complexType>
+            </xs:element>
+        </xs:all>
+        <xs:attribute name="version" type="xs:integer" use="required"/>
+    </xs:complexType>
+</xs:element>
+</xs:schema>

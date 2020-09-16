@@ -1,0 +1,363 @@
+#! /usr/bin/env python3
+
+# pip install -r requirements.txt
+
+# %% Imports
+import argparse
+import lxml.etree as ET
+import time
+import sys
+from dict2xml import dict2xml
+import xmlschema
+from pprint import pprint
+from glob import glob as glob
+# import pandas as pd
+from pathlib2 import Path
+from tabulate import tabulate
+import Utility as utilities
+from WebFrostJobIngestor import WebFrostJobIngestor as WebFrostJobIngestor
+import logging
+
+logging.basicConfig(filename='froximal_out.log',
+                    filemode='a',
+                    format='%(asctime)s,%(msecs)d %(name)s %(levelname)s %(message)s',
+                    datefmt='%H:%M:%S',
+                    level=logging.DEBUG)
+
+logging.info("FROXIMAL")
+
+
+frappe_proj_schema = xmlschema.XMLSchema('schemas/frappe.proj.schema.xsd')
+
+frappeator_proj_schema = xmlschema.XMLSchema(
+    'schemas/frappeator.proj.schema.xsd')
+
+glaciator_proj_schema = xmlschema.XMLSchema(
+    'schemas/glaciator.proj.schema.xsd')
+
+frost_proj_schema = xmlschema.XMLSchema('schemas/frost.proj.schema.xsd')
+
+
+# %% Class
+class Froximal:
+
+    def __init__(self, root, indb, outdb):
+        self.root = root
+        self.indb = indb
+        self.outdb = outdb
+        self.name = 'Froximator'
+        self.logger = logging.getLogger("Froximal")
+
+    def validate(self, xml_filename):
+        utilities.message('Validating schema of %s' %
+                          Path(xml_filename).parts[-1])
+        _type = self.parse_name_for_type(xml_filename)
+        if _type is not None:
+            if (_type == 'glaciator'):
+                return glaciator_proj_schema.validate(xml_filename)
+            if (_type == 'frappeator'):
+                return frappeator_proj_schema.validate(xml_filename)
+            if (_type == 'frappe'):
+                return frappe_proj_schema.validate(xml_filename)
+            if (_type == 'frost'):
+                return frost_proj_schema.validate(xml_filename)
+        return False
+
+    def parse_name_for_type(self, xml_filename):
+        if ('glaciator.proj' in xml_filename):
+            return 'glaciator'
+        if ('frappeator.proj' in xml_filename):
+            return 'frappeator'
+        if ('frappe.proj' in xml_filename):
+            return 'frappe'
+        if ('frost.proj' in xml_filename):
+            return 'frost'
+        return None
+
+    def which_transform(self, xml_filename):
+        _type = self.parse_name_for_type(xml_filename)
+        if _type is not None:
+            return './stylesheets/' + _type + '.proj.ToSQL.xsl'
+        else:
+            raise Exception(
+                'No XSL found for that project type: %s' % xml_filename)
+
+    def gather_metadata(self, xml_filename):
+        meta = {}
+
+        _type = self.parse_name_for_type(xml_filename)
+        if _type is not None:
+            if _type == 'glaciator':
+                meta = self.gather_metadata_for_glaciator(xml_filename)
+            if _type == 'frappeator':
+                meta = self.gather_metadata_for_frappeator(xml_filename)
+            if _type == 'frappe':
+                meta = self.gather_metadata_for_frappe(xml_filename)
+            if _type == 'frost':
+                meta = self.gather_metadata_for_frost(xml_filename)
+        return meta
+
+    def extract_replicate_from_path(self, xml_filename):
+        return Path(xml_filename).parts[-2]
+
+    def gather_metadata_for_frost(self, xml_filename):
+        meta = {}
+        meta['uuid'] = utilities.extract_uuid_from_path(Path(xml_filename
+                                                             .replace(
+                                                                 '.frost.proj',
+                                                                 '')))
+        # meta['replicate'] = self.extract_replicate_from_path(xml_filename)
+        # replicate IS frost proj name!
+        return meta
+
+    def gather_metadata_for_glaciator(self, xml_filename):
+        meta = {}
+        meta['uuid'] = utilities.extract_uuid_from_path(Path(xml_filename
+                                                             .replace(
+                                                                 '.glaciator.proj',
+                                                                 '')))
+        # meta['sql'] = self.prep_metadata_as_sql(meta)
+        return meta
+
+    def gather_metadata_for_frappeator(self, xml_filename):
+        meta = {}
+        meta['uuid'] = utilities.extract_uuid_from_path(Path(xml_filename))
+        meta['project'] = Path(
+            xml_filename).parts[-1].replace('.frappeator.proj', '')
+
+        # regime = GlaciatorProject -> multi_project_name
+
+        return meta
+
+    def gather_metadata_for_frappe(self, xml_filename):
+        meta = {}
+        tiers = xml_filename.split('/')
+        # print(tiers)
+        uuid = utilities.extract_uuid_from_path(Path(xml_filename))
+
+        """
+        This is where everything can fall down!
+        The folder heirarchy and depths determine important ids.
+        Any change to this structure and this breaks.
+        """
+
+        if(uuid):
+            meta['uuid'] = tiers[3]
+            # assert(meta['uuid'] == uuid)
+            meta['project'] = tiers[-4]
+            meta['regime'] = tiers[-3]
+            meta['replicate'] = tiers[-2]
+        return meta
+
+    def transform(self, xml_filename='in.xml', save=False):
+        utilities.message('Attempting transform of %s' %
+                          Path(xml_filename).parts[-1])
+        try:
+            xsl_filename = self.which_transform(xml_filename)
+            self.validate(xml_filename)
+            dom = ET.parse(xml_filename)
+            xslt = ET.parse(xsl_filename)
+            transform = ET.XSLT(xslt)
+            meta = self.gather_metadata(xml_filename)
+            meta_xml = dict2xml(meta, wrap='meta', indent='   ')
+            root = dom.getroot()
+            root.append(ET.fromstring(meta_xml))
+            tree = ET.ElementTree(root)
+            modded = ET.tostring(tree, pretty_print=True)
+            newdom = transform(tree)
+            t = ET.tostring(newdom, pretty_print=True)
+
+            if save:
+                with open(xml_filename + '.test.xml', 'wb') as orig:
+                    orig.write(modded)
+                    utilities.message('Saved %s' %
+                                      Path(xml_filename).parts[-1])
+
+                outfile = xml_filename.replace('.proj', '.sql.xml')
+                with open(outfile, 'wb') as o:
+                    o.write(t)
+                    utilities.message('Wrote %s' % Path(outfile).parts[-1])
+
+            utilities.message('Transform complete for %s' % (
+                Path(xml_filename).parts[-1]))
+
+        except Exception as e:
+            utilities.error(e)
+            sys.exit(0)
+
+    def preflight(self):
+        # Pre-flight
+        expected = [
+            self.root,
+            self.root + '/glaciator_out',
+            self.root + '/glaciator_out/glaciator_project_file',
+            self.root + '/frappeator_out'
+        ]
+        utilities.warn('Do the expected sub-folders exist?')
+
+        print(utilities.tabulate_permissions(
+            utilities.permissons_truth_table_for_path_list(expected)))
+
+        # Check and validate data_store
+        if not utilities.check_path_sanity(expected):
+            utilities.warn(utilities.check_path_sanity(expected))
+            return False
+        else:
+            utilities.message('Validated data store.')
+            return True
+
+    def sqlize(self, saving=False):
+        all_glaciators = glob(
+            self.root + '/glaciator_out/glaciator_project_file/*.glaciator.proj', recursive=True)
+
+        all_frost = glob(
+            self.root + '/glaciator_out/**/*.frost.proj', recursive=True)
+
+        all_frappeators = glob(
+            self.root + '/frappeator_out/*/*.frappeator.proj', recursive=True)
+
+        all_frappes = glob(
+            self.root + '/frappeator_out/*/*/*/*/*/*.frappe.proj', recursive=True)
+
+        utilities.message('Scanning for Glaciator projects...')
+        [print(x) for x in all_glaciators]
+
+        utilities.message('Transforming Glaciators...')
+        [f.transform(xml_filename=x, save=saving) for x in all_glaciators]
+
+        utilities.message('**** Scanning for Frost projects...')
+        [print(x) for x in all_frost]
+
+        utilities.message('**** Transforming Frosts...')
+        [f.transform(xml_filename=x, save=saving) for x in all_frost]
+
+        utilities.message('Scanning for Frappes projects...')
+        [print(x) for x in all_frappes]
+
+        utilities.message('Transforming Frappes...')
+        [f.transform(xml_filename=x, save=saving) for x in all_frappes]
+
+        utilities.message('Scanning for Frappeators projects...')
+        [print(x) for x in all_frappeators]
+
+        utilities.message('Transforming Frappeators...')
+        [f.transform(xml_filename=x, save=saving) for x in all_frappeators]
+
+        return True
+
+
+    def ingest(self):
+        utilities.message('Ingesting...')
+        wfji = WebFrostJobIngestor(self.root, self.indb, self.outdb)
+        if wfji.good_connections():
+            utilities.message('We have validated the connections to the DBs.')
+
+            # This is where the magic happens...
+            utilities.message('Converting the *.proj files to SQL now...')
+            start = time.time()
+            self.sqlize(True)
+            end = time.time()
+            utilities.message(
+                "Time to complete SQLize: %.5f seconds." % (end - start))
+
+            utilities.message('Projects readied...')
+            # [print(pr) for pr in wfji.cross_match()]
+
+            # Finally we can...
+            imports = wfji.ingest()
+            utilities.message('Imported %s jobs.' % len(imports))
+
+    def sqlize_with_defaults(self):
+        if self.preflight(self.root):
+            utilities.message('Pre-flight has completed successfully.')
+            start = time.time()
+            self.sqlize(True)
+            end = time.time()
+            utilities.message(
+                "Time to complete the SQLize was %.5f seconds." % (end - start))
+
+    def run_with_defaults(self):
+        wfji = WebFrostJobIngestor(self.root, self.indb, self.outdb)
+        try:
+            self.ingest(wfji)
+
+        except Exception as e:
+            utilities.error(e)
+            sys.exit()
+
+# %% Default main function
+
+
+if __name__ == '__main__':
+
+    utilities.clear()
+
+    logo = """
+
+███████╗██████╗  ██████╗ ██╗  ██╗██╗███╗   ███╗ █████╗ ██╗
+██╔════╝██╔══██╗██╔═══██╗╚██╗██╔╝██║████╗ ████║██╔══██╗██║
+█████╗  ██████╔╝██║   ██║ ╚███╔╝ ██║██╔████╔██║███████║██║
+██╔══╝  ██╔══██╗██║   ██║ ██╔██╗ ██║██║╚██╔╝██║██╔══██║██║
+██║     ██║  ██║╚██████╔╝██╔╝ ██╗██║██║ ╚═╝ ██║██║  ██║███████╗
+╚═╝     ╚═╝  ╚═╝ ╚═════╝ ╚═╝  ╚═╝╚═╝╚═╝     ╚═╝╚═╝  ╚═╝╚══════╝
+
+"""
+    description = "Fire Regime Operations eXtensible Input Markup Abstraction Layer"
+    parser = argparse.ArgumentParser(
+        prog='froximal', description=description)
+
+    parser.add_argument('--datapath', type=str,
+                        nargs=1, help='path to the datastorage directory')
+
+    parser.add_argument('--indb', type=str,
+                        nargs=1, help='postgres db connection string to input')
+
+    parser.add_argument('--outdb', type=str,
+                        nargs=1, help='postgres db connection string to output')
+
+    parser.add_argument('--save', action='store_true',
+                        help='save the results')
+
+    args = parser.parse_args()
+
+    root = '../datastorage'
+
+    saving = False
+
+    print("%s" % logo)
+    print("%s" % description)
+    print("by Anthony Rawlins (University of Melbourne): for FROST/DSS\n\n")
+    variable = input('Press any key to continue: ')
+
+    if variable is not None:
+        if args.datapath is not None:
+            root = (args.datapath[0] or root)
+
+        if args.indb is not None:
+            indb = args.indb[0]
+        else:
+            indb = "postgresql://postgres:secret@192.168.1.188:5432/WHOLE_TOMATOES"
+
+        if args.outdb is not None:
+            outdb = args.outdb[0]
+        else:
+            outdb = "postgresql://postgres:secret@192.168.1.188:5432/WHOLE_TOMATOES"
+
+        if args.save is not None:
+            # print(args.save)
+            save = args.save
+
+            try:
+                f = Froximal(root, indb, outdb)
+                f.preflight()
+
+                if save:
+                    f.ingest()
+            except Exception as e:
+                utilities.error(e)
+                sys.exit()
+        else:
+            save = False
+            variable = input('Press any key to continue: ')
+            if variable is not None:
+                sys.exit(0)

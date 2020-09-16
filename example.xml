@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<preflighted>
+
+
+    <relation>
+        <sqlgroup>
+            <sqlstatement table="1" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="2" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="3" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="4" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+        </sqlgroup>
+        <meta>
+            <uuid>example uuid 1</uuid>
+        </meta>
+    </relation>
+
+    <relation>
+        <sqlgroup>
+            <sqlstatement table="1" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="2" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="3" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="4" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+        </sqlgroup>
+        <meta>
+            <uuid>example uuid 2</uuid>
+        </meta>
+    </relation>
+
+    <relation>
+        <sqlgroup>
+            <sqlstatement table="1" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="2" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="3" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="4" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+        </sqlgroup>
+        <meta>
+            <uuid>example uuid 3</uuid>
+        </meta>
+    </relation>
+
+    <relation>
+        <sqlgroup>
+            <sqlstatement table="1" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="2" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="3" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+            <sqlstatement table="4" action="insert">INSERT INTO a (b) VALUES ('value') RETURNING a_id;</sqlstatement>
+        </sqlgroup>
+        <meta>
+            <uuid>example uuid 4</uuid>
+        </meta>
+    </relation>
+
+</preflighted>

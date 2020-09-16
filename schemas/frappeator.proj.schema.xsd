@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+elementFormDefault="qualified">
+<xs:element name="frappeator_project">
+    <xs:complexType>
+        <xs:sequence>
+            <xs:element name="project_name" type="xs:string"/>
+            <xs:element name="project_descr" type="xs:string"/>
+            <xs:element name="glaciator_output_results_root_dir_path" type="xs:string"/>
+            <xs:element name="frappeator_output_root_dir_path" type="xs:string"/>
+            <xs:element name="frappe_exe_path" type="xs:string"/>
+
+            <xs:element name="is_frost_multi_proj" type="xs:boolean"/>
+            <xs:element name="concurrent_threads" type="xs:integer"/>
+
+            <xs:element name="frappe_multi_project" minOccurs="0" maxOccurs="100">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="frost_output_results_dir_rel_path" type="xs:string"/>
+                        <xs:element name="frappe_project_file_id" type="xs:string"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+
+            <xs:element name="frappe_project_template_file" minOccurs="0" maxOccurs="100">
+                <xs:complexType>
+                    <xs:all>
+                        <xs:element name="id" type="xs:string"/>
+                        <xs:element name="path" type="xs:string"/>
+                    </xs:all>
+                </xs:complexType>
+            </xs:element>
+
+        </xs:sequence>
+        <xs:attribute name="version" type="xs:decimal" use="required"/>
+    </xs:complexType>
+</xs:element>
+</xs:schema>
